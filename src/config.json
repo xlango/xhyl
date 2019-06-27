@@ -1,0 +1,6 @@
+{
+	"MysqlUrl": "root:123456@tcp(127.0.0.1:3306)/comprehensive?charset=utf8",
+	"MysqlTbPrefix":"tb_",
+	"MysqlMaxIdleConns": 150,
+	"MysqlMaxOpenConns": 300
+}

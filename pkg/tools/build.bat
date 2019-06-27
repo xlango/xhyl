@@ -1,0 +1,1 @@
+go build main.go listener.go buffer.go apbaseinfo.go apbaseinfodb.go phoneinfo.go phoneinfodb.go phoneinfokafka.go hotspot.go hotspotdb.go kafka.go ap_detect_info.pb.go aduit.go aduitdb.go iops.go iopsdb.go rtls.go rtlsdb.go diagnose.go diagnosedb.go cassandra.go sqldb.go public.go utils.go pushapicahe.go rtlsreport.go
