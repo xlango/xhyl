@@ -2,9 +2,10 @@ package conf
 
 import (
 	"github.com/jinzhu/gorm"
+	"model"
 )
 
-func GetMysqlDb(v interface{}) (db *gorm.DB) {
+func GetMysqlDb() (db *gorm.DB) {
 	var err error
 	//连接串
 	db, err = gorm.Open("mysql", GlobalConfig.MysqlUrl)
@@ -21,11 +22,22 @@ func GetMysqlDb(v interface{}) (db *gorm.DB) {
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return GlobalConfig.MysqlTbPrefix + defaultTableName
 	}
+
+	return db
+}
+
+func InitTable() {
+	CreateTalbe(model.User{})
+	CreateTalbe(model.Like{})
+}
+
+func CreateTalbe(v interface{}) {
+	msdb := GetMysqlDb()
+	defer msdb.Close()
 	//判断表是否存在，不存在则创建
-	if !db.HasTable(v) {
-		if err := db.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8").CreateTable(v).Error; err != nil {
+	if !msdb.HasTable(v) {
+		if err := msdb.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8").CreateTable(v).Error; err != nil {
 			panic(err)
 		}
 	}
-	return db
 }

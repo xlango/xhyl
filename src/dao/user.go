@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"conf"
 	"model"
 )
 
@@ -9,31 +10,30 @@ type UserDao struct {
 }
 
 func (this *UserDao) InsertUser() {
-	//msdb := conf.GetMysqlDb()
+	msdb := conf.GetMysqlDb()
+	defer msdb.Close()
+
+	msdb.Create(this.User)
 }
 
-//func (this *UserDao) GetUserByIf() []model.User {
-//	msdb := conf.GetMysqlDb()
-//	//同步数据库结构
-//	msdb.Sync2(new(model.User))
-//
-//	users := make([]model.User, 0)
-//	//sql := "select * from tb_user where 1=1"
-//	//if this.User.Id != 0 {
-//	//	sql = fmt.Sprintf("%s %s", sql, " and id=?")
-//	//}
-//	////if this.User.Username != "" || len(this.User.Username) != 0 {
-//	////	sql = fmt.Sprintf("%s %s", sql, " and username =?")
-//	////}
-//	//results, _ := msdb.Query(sql, this.User.Id)
-//	//for _, i := range results {
-//	//	bytes := i["id"]
-//	//	user := model.User{}
-//	//	user.Username = string(i["username"])
-//	//	user.Password = string(i["password"])
-//	//	users = append(users, user)
-//	//	fmt.Println(users, BytesToInt64(bytes))
-//	//}
-//	msdb.Where(&this.User).Find(&users)
-//	return users
-//}
+func (this *UserDao) GetUserByIf(pageSize int, pageIndex int) []model.User {
+	msdb := conf.GetMysqlDb()
+	defer msdb.Close()
+	users := make([]model.User, 0)
+	msdb.Model(model.User{}).Where(this.User).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&users)
+	return users
+}
+
+func (this *UserDao) UpdateUser() {
+	msdb := conf.GetMysqlDb()
+	defer msdb.Close()
+	msdb.Model(this.User).Updates(this.User)
+}
+
+func (this *UserDao) DeleteUser(ids []int) {
+	msdb := conf.GetMysqlDb()
+	defer msdb.Close()
+	for _, id := range ids {
+		msdb.Where("id = ?", id).Delete(model.User{})
+	}
+}

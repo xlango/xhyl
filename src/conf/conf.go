@@ -25,6 +25,7 @@ func InitConfig() {
 		currentDir = currentDir + string(os.PathSeparator)
 	}
 
+	//获取主机可用cpu数，配置程序使用cpu核数
 	cpuNumber := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpuNumber)
 
@@ -39,8 +40,9 @@ func InitConfig() {
 	//初始化日志
 	logger.InitLogger(currentDir)
 
-	//初始化mysql
-	//InitMysql()
+	//初始化mysql,创建表
+	//InitMysqlDb()
+	InitTable()
 
 	//读取config.json配置文件相关配置
 	configPath := currentDir + "config.json"
