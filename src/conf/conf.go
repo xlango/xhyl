@@ -16,6 +16,12 @@ type ConfigInfo struct {
 	MysqlTbPrefix     string //Mysql表前缀
 	MysqlMaxIdleConns int    //Mysql最大空闲连接
 	MysqlMaxOpenConns int    //Mysql最大连接
+
+	RedisHost         string //redis ip:port
+	RedisPoolSize     int    //redis连接池大小
+	RedisReadTimeout  int    //redis 读数据超时
+	RedisWriteTimeout int    //redis 写数据超时
+	RedisIdleTimeout  int    //空闲连接时长
 }
 
 func InitConfig() {
@@ -35,14 +41,15 @@ func InitConfig() {
 		MysqlTbPrefix:     "",
 		MysqlMaxIdleConns: 150,
 		MysqlMaxOpenConns: 250,
+		RedisHost:         "127.0.0.1:6379",
+		RedisPoolSize:     1000,
+		RedisReadTimeout:  100,
+		RedisWriteTimeout: 100,
+		RedisIdleTimeout:  60,
 	}
 
 	//初始化日志
 	logger.InitLogger(currentDir)
-
-	//初始化mysql,创建表
-	//InitMysqlDb()
-	InitTable()
 
 	//读取config.json配置文件相关配置
 	configPath := currentDir + "config.json"
@@ -56,4 +63,10 @@ func InitConfig() {
 		logger.LogError(err)
 	}
 
+	//初始化mysql,创建表
+	//InitMysqlDb()
+	InitTable()
+
+	//初始化redis
+	InitRedis()
 }

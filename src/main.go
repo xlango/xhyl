@@ -2,12 +2,13 @@ package main
 
 import (
 	"conf"
-	"dao"
+	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"model"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -21,15 +22,20 @@ func main() {
 	//time.Sleep(time.Second * 20)
 
 	user := &model.User{
-		//Id:       1,
-		//Username: "234",
-		//Password: "234",
+		Id:       1,
+		Username: "234",
+		Password: "234",
 	}
-	userdao := &dao.UserDao{
-		User: user,
-	}
-	ids := []int{4, 5}
-	userdao.DeleteUser(ids)
+
+	jsons, _ := json.Marshal(user)
+	set(strconv.FormatInt(user.Id, 10), string(jsons), -1)
+	s, b := get(strconv.FormatInt(user.Id, 10))
+	fmt.Println(s, b)
+	//userdao := &dao.UserDao{
+	//	User: user,
+	//}
+	//ids := []int{4, 5}
+	//userdao.DeleteUser(ids)
 	//userdao.UpdateUser()
 	//userdao.InsertUser()
 	//users := userdao.GetUserByIf(2, 2)
@@ -56,4 +62,36 @@ func insert(ch chan string) {
 		record := msdb.NewRecord(like)
 		fmt.Println(record)
 	}
+}
+
+var Client *redis.Client
+
+func init() {
+	Client = redis.NewClient(&redis.Options{
+		Addr:         "39.108.147.36:6379",
+		PoolSize:     1000,
+		ReadTimeout:  time.Millisecond * time.Duration(100),
+		WriteTimeout: time.Millisecond * time.Duration(100),
+		IdleTimeout:  time.Second * time.Duration(60),
+	})
+
+	_, err := Client.Ping().Result()
+	if err != nil {
+		panic("init redis error")
+	} else {
+		fmt.Println("init redis ok")
+	}
+}
+
+func get(key string) (string, bool) {
+	r, err := Client.Get(key).Result()
+	if err != nil {
+		return "", false
+	}
+
+	return r, true
+}
+
+func set(key string, val interface{}, expTime int32) {
+	Client.Set(key, val, time.Duration(expTime)*time.Second)
 }
