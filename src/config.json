@@ -7,6 +7,8 @@
 	"RedisHost": "39.108.147.36:6379",
 	"RedisPoolSize": 1000,
 	"RedisReadTimeout": 100,
-	"MysqlMaxOpenConns": 100,
-	"MysqlMaxOpenConns": 60
+	"RedisWriteTimeout": 100,
+	"RedisIdleTimeout": 60,
+
+	"MongoHost": "39.108.147.36:27017"
 }

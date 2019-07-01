@@ -22,6 +22,8 @@ type ConfigInfo struct {
 	RedisReadTimeout  int    //redis 读数据超时
 	RedisWriteTimeout int    //redis 写数据超时
 	RedisIdleTimeout  int    //空闲连接时长
+
+	MongoHost string //mongodb连接
 }
 
 func InitConfig() {
@@ -46,6 +48,7 @@ func InitConfig() {
 		RedisReadTimeout:  100,
 		RedisWriteTimeout: 100,
 		RedisIdleTimeout:  60,
+		MongoHost:         "127.0.0.1:27017",
 	}
 
 	//初始化日志
