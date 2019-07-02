@@ -71,5 +71,5 @@ func InitConfig() {
 	InitTable()
 
 	//初始化redis
-	InitRedis()
+	//InitRedis()
 }

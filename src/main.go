@@ -2,7 +2,6 @@ package main
 
 import (
 	"conf"
-	"encoding/json"
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/go-redis/redis"
@@ -14,7 +13,7 @@ import (
 	"time"
 )
 
-var Address = []string{"10.130.138.164:9092", "10.130.138.164:9093", "10.130.138.164:9094"}
+var Address = []string{"192.168.10.108:9092"}
 var RedisClient *conf.RedisClient
 var MongoClient *conf.MongoClient
 
@@ -30,16 +29,16 @@ func main() {
 	//
 	//time.Sleep(time.Second * 20)
 
-	user := &model.User{
-		Id:       2,
-		Username: "222",
-		Password: "222",
-	}
-
-	jsons, _ := json.Marshal(user)
-	RedisClient.SetExpTime(strconv.FormatInt(user.Id, 10), string(jsons), -1)
-	s, b := RedisClient.Get(strconv.FormatInt(user.Id, 10))
-	fmt.Println(s, b)
+	//user := &model.User{
+	//	Id: 3,
+	//	//Username: "333333",
+	//	//Password: "333333",
+	//}
+	//
+	//jsons, _ := json.Marshal(user)
+	//RedisClient.SetExpTime(strconv.FormatInt(user.Id, 10), string(jsons), -1)
+	//s, b := RedisClient.Get(strconv.FormatInt(user.Id, 10))
+	//fmt.Println(s, b)
 	//userdao := &dao.UserDao{
 	//	User: user,
 	//}
@@ -49,7 +48,14 @@ func main() {
 	//userdao.InsertUser()
 	//users := userdao.GetUserByIf(2, 2)
 	//fmt.Println(users)
-	//MongoClient.Insert(user)
+
+	//rs := MongoClient.FindOne(map[string]interface{}{"username": "222"})
+	//rs := MongoClient.FindAll(nil, model.User{}, 1, 2)
+	//MongoClient.Update(map[string]interface{}{"id": 1}, map[string]interface{}{"username": "111111", "password": "111111"})
+	//MongoClient.Delete(map[string]interface{}{"id": 2})
+	//fmt.Println(rs)
+
+	syncProducer(Address)
 }
 
 func write(ch chan string) {
@@ -77,38 +83,11 @@ func insert(ch chan string) {
 var Client *redis.Client
 
 func init() {
-	Client = redis.NewClient(&redis.Options{
-		Addr:         "39.108.147.36:6379",
-		PoolSize:     1000,
-		ReadTimeout:  time.Millisecond * time.Duration(100),
-		WriteTimeout: time.Millisecond * time.Duration(100),
-		IdleTimeout:  time.Second * time.Duration(60),
-	})
-
-	_, err := Client.Ping().Result()
-	if err != nil {
-		panic("init redis error")
-	} else {
-		fmt.Println("init redis ok")
-	}
 
 	MongoClient = &conf.MongoClient{
 		Database:   "mydb_tutorial",
 		Collection: "t_student",
 	}
-}
-
-func get(key string) (string, bool) {
-	r, err := Client.Get(key).Result()
-	if err != nil {
-		return "", false
-	}
-
-	return r, true
-}
-
-func set(key string, val interface{}, expTime int32) {
-	Client.Set(key, val, time.Duration(expTime)*time.Second)
 }
 
 //同步消息模式

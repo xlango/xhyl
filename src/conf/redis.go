@@ -9,16 +9,21 @@ import (
 var Client *redis.Client
 
 type RedisClient struct {
-	DB int //redis库编号
 }
 
-func InitRedis() {
+func initRedis(db []int) {
+	dbCode := 0
+	if len(db) > 0 {
+		dbCode = db[0]
+	}
+
 	Client = redis.NewClient(&redis.Options{
 		Addr:         GlobalConfig.RedisHost,
 		PoolSize:     GlobalConfig.RedisPoolSize,
 		ReadTimeout:  time.Millisecond * time.Duration(GlobalConfig.RedisReadTimeout),
 		WriteTimeout: time.Millisecond * time.Duration(GlobalConfig.RedisWriteTimeout),
 		IdleTimeout:  time.Second * time.Duration(GlobalConfig.RedisIdleTimeout),
+		DB:           dbCode,
 	})
 
 	_, err := Client.Ping().Result()
@@ -29,8 +34,8 @@ func InitRedis() {
 	}
 }
 
-func (this *RedisClient) Get(key string) (string, bool) {
-	Client.Options().DB = this.DB
+func (this *RedisClient) Get(key string, db ...int) (string, bool) {
+	initRedis(db)
 	r, err := Client.Get(key).Result()
 	if err != nil {
 		return "", false
@@ -38,8 +43,8 @@ func (this *RedisClient) Get(key string) (string, bool) {
 	return r, true
 }
 
-func (this *RedisClient) SetExpTime(key string, val interface{}, expTime int32) {
-	Client.Options().DB = this.DB
+func (this *RedisClient) SetExpTime(key string, val interface{}, expTime int32, db ...int) {
+	initRedis(db)
 	Client.Set(key, val, time.Duration(expTime)*time.Second)
 }
 
