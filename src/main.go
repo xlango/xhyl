@@ -10,12 +10,16 @@ import (
 	"model"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
 var Address = []string{"192.168.10.108:9092"}
 var RedisClient *conf.RedisClient
 var MongoClient *conf.MongoClient
+var KafkaClientP *conf.KafkaClient
+var KafkaClientC *conf.KafkaClient
+var wg sync.WaitGroup
 
 const URL = "39.108.147.36:27017" //mongodb的地址
 
@@ -55,7 +59,32 @@ func main() {
 	//MongoClient.Delete(map[string]interface{}{"id": 2})
 	//fmt.Println(rs)
 
-	syncProducer(Address)
+	//syncProducer(Address)
+	p()
+
+	//c()
+}
+
+func p() {
+	KafkaClientP = &conf.KafkaClient{
+		Topic: "test",
+	}
+	for i := 0; i <= 20; i++ {
+		KafkaClientP.SyncProducer(strconv.Itoa(i), "xhyl"+strconv.Itoa(i))
+	}
+}
+func c() {
+	KafkaClientC = &conf.KafkaClient{
+		Topic: "test",
+	}
+	msg := make(chan string, 0)
+
+	var a string
+	go KafkaClientC.KafkaConsumer(msg)
+	for true {
+		a = <-msg
+		fmt.Println(a)
+	}
 }
 
 func write(ch chan string) {
@@ -88,6 +117,45 @@ func init() {
 		Database:   "mydb_tutorial",
 		Collection: "t_student",
 	}
+}
+
+func KafkaConsumer(msgChan chan string) {
+	// 根据给定的代理地址和配置创建一个消费者
+	consumer, err := sarama.NewConsumer([]string{"192.168.10.108:9092"}, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer consumer.Close()
+	//Partitions(topic):该方法返回了该topic的所有分区id
+	partitionList, err := consumer.Partitions("test")
+	if err != nil {
+		panic(err)
+	}
+
+	for partition := range partitionList {
+		//ConsumePartition方法根据主题，分区和给定的偏移量创建创建了相应的分区消费者
+		//如果该分区消费者已经消费了该信息将会返回error
+		//sarama.OffsetNewest:表明了为最新消息
+		pc, err := consumer.ConsumePartition("test", int32(partition), sarama.OffsetNewest)
+		if err != nil {
+			panic(err)
+		}
+		defer pc.AsyncClose()
+		wg.Add(1)
+		go func(sarama.PartitionConsumer) {
+			defer wg.Done()
+			//Messages()该方法返回一个消费消息类型的只读通道，由代理产生
+			for msg := range pc.Messages() {
+				//fmt.Printf("%s---Partition:%d, Offset:%d, Key:%s, Value:%s\n", msg.Topic, msg.Partition, msg.Offset, string(msg.Key), string(msg.Value))
+				setMsg(msgChan, string(msg.Value))
+			}
+		}(pc)
+	}
+	wg.Wait()
+}
+
+func setMsg(msgs chan string, msg string) {
+	msgs <- msg
 }
 
 //同步消息模式

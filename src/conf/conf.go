@@ -24,6 +24,8 @@ type ConfigInfo struct {
 	RedisIdleTimeout  int    //空闲连接时长
 
 	MongoHost string //mongodb连接
+
+	KafkaHosts string //kafka连接
 }
 
 func InitConfig() {
@@ -49,6 +51,7 @@ func InitConfig() {
 		RedisWriteTimeout: 100,
 		RedisIdleTimeout:  60,
 		MongoHost:         "127.0.0.1:27017",
+		KafkaHosts:        "127.0.0.1:9092",
 	}
 
 	//初始化日志
@@ -72,4 +75,7 @@ func InitConfig() {
 
 	//初始化redis
 	//InitRedis()
+
+	//初始化Kafka
+	InitKafka()
 }
