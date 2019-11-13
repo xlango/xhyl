@@ -2,7 +2,7 @@ package conf
 
 import (
 	"github.com/jinzhu/gorm"
-	"model"
+	"xhyl/model"
 )
 
 func GetMysqlDb() (db *gorm.DB) {

@@ -3,6 +3,8 @@ package conf
 import (
 	"fmt"
 	"github.com/Shopify/sarama"
+	"github.com/bsm/sarama-cluster"
+	"github.com/wonderivan/logger"
 	"log"
 	"os"
 	"strings"
@@ -58,6 +60,39 @@ func (this *KafkaClient) KafkaConsumer(msgChan chan string) {
 		}(pc)
 	}
 	wg.Wait()
+}
+
+func (this *KafkaClient) KafkaConsumerCluster(groupid string, msgChan chan string) {
+	groupID := groupid
+	config := cluster.NewConfig()
+	config.Consumer.Return.Errors = true
+	config.Group.Return.Notifications = true
+	config.Consumer.Offsets.CommitInterval = 1 * time.Second
+	config.Consumer.Offsets.Initial = sarama.OffsetNewest //初始从最新的offset开始
+
+	c, err := cluster.NewConsumer(url, groupID, []string{this.Topic}, config)
+	if err != nil {
+		logger.Error("Failed open consumer: %v", err)
+		return
+	}
+	defer c.Close()
+	go func() {
+		for err := range c.Errors() {
+			logger.Error("Error: %s", err.Error())
+		}
+	}()
+
+	go func() {
+		for note := range c.Notifications() {
+			logger.Info("Rebalanced: %+v", note)
+		}
+	}()
+
+	for msg := range c.Messages() {
+		logger.Info("kafka-consumer:%s---Partition:%d, Offset:%d, Key:%s", msg.Topic, msg.Partition, msg.Offset, string(msg.Key))
+		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
+		setMsg(msgChan, string(msg.Value))
+	}
 }
 
 func setMsg(msgs chan string, msg string) {

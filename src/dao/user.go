@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"conf"
-	"model"
+	"xhyl/conf"
+	"xhyl/model"
 )
 
 type UserDao struct {
